@@ -1,0 +1,40 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-ingress
+  namespace: istio-ingress
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: gateway
+      version: '1.x'
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+  dependsOn:
+    - name: istiod
+      namespace: istio-system
+  values:
+    service:
+      type: ClusterIP
+    containerPorts:
+      - containerPort: 15021
+        hostPort: 15021
+        protocol: TCP
+        name: status-port
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+        name: http
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+        name: https
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Equal"
+        effect: "NoSchedule"
+    nodeSelector:
+      ingress-ready: "true"
