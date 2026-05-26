@@ -4,7 +4,6 @@ namespace: podinfo-staging
 resources:
   - namespace.yaml
   - ../../base
-  - ingress.yaml
 patches:
   - path: replicas-patch.yaml
 images:

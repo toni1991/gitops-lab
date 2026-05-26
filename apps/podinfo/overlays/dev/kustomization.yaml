@@ -4,6 +4,5 @@ namespace: podinfo-dev
 resources:
   - namespace.yaml
   - ../../base
-  - ingress.yaml
 patches:
   - path: replicas-patch.yaml
