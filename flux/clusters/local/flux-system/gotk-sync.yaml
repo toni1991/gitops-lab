@@ -7,9 +7,7 @@ spec:
   interval: 1m
   ref:
     branch: main
-  url: ssh://git@github.com/toni1991/gitops-lab
-  secretRef:
-    name: flux-image-automation
+  url: https://github.com/toni1991/gitops-lab
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
