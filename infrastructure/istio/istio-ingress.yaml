@@ -1,40 +1,67 @@
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-ingress
+  namespace: istio-ingress
+---
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: istio-ingress
   namespace: istio-ingress
 spec:
-  interval: 10m
-  chart:
+  selector:
+    matchLabels:
+      istio: ingress
+  template:
+    metadata:
+      annotations:
+        inject.istio.io/templates: gateway
+      labels:
+        istio: ingress
+        sidecar.istio.io/inject: "true"
     spec:
-      chart: gateway
-      version: '1.x'
-      sourceRef:
-        kind: HelmRepository
-        name: istio
-        namespace: flux-system
-  dependsOn:
-    - name: istiod
-      namespace: istio-system
-  values:
-    service:
-      type: ClusterIP
-    containerPorts:
-      - containerPort: 15021
-        hostPort: 15021
-        protocol: TCP
-        name: status-port
-      - containerPort: 80
-        hostPort: 80
-        protocol: TCP
-        name: http
-      - containerPort: 443
-        hostPort: 443
-        protocol: TCP
-        name: https
-    tolerations:
-      - key: "node-role.kubernetes.io/control-plane"
-        operator: "Equal"
-        effect: "NoSchedule"
-    nodeSelector:
-      ingress-ready: "true"
+      serviceAccountName: istio-ingress
+      containers:
+        - name: istio-proxy
+          image: auto  # wird von istiod injection ersetzt
+          ports:
+            - containerPort: 15021
+              hostPort: 15021
+              protocol: TCP
+              name: status-port
+            - containerPort: 80
+              hostPort: 80
+              protocol: TCP
+              name: http
+            - containerPort: 443
+              hostPort: 443
+              protocol: TCP
+              name: https
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: 15021
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Equal"
+          effect: "NoSchedule"
+      nodeSelector:
+        ingress-ready: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingress
+  namespace: istio-ingress
+spec:
+  type: ClusterIP
+  selector:
+    istio: ingress
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
