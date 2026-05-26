@@ -1,13 +1,12 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: podinfo
+  name: podinfo-prod
   namespace: flux-system
 spec:
   interval: 1m
-  path: ./apps/podinfo
+  path: ./apps/podinfo/overlays/prod
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
-  targetNamespace: default
